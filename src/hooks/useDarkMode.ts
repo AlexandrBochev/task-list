@@ -1,11 +1,8 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 export const useDarkMode = () => {
   const [darkMode, setDarkMode] = useState(localStorage.getItem("darkMode") === "true")
-
-  useEffect(() => {
-    localStorage.setItem("darkMode", darkMode.toString())
-  }, [darkMode])
+  localStorage.setItem("darkMode", darkMode.toString())
 
   const toggleDarkMode = () => setDarkMode(!darkMode)
 
