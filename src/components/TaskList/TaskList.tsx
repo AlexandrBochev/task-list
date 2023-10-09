@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { TypeTask } from "../../models/models"
 import { Task } from "../Task/Task"
 import { TaskInput } from "../TaskInput/TaskInput"
@@ -8,37 +8,37 @@ import { useDarkMode } from "../../hooks/useDarkMode"
 
 const TaskList = () => {
   // Hooks
-  const [darkMode, setDarkMode] = useDarkMode()
+  const [darkMode, toggleDarkMode] = useDarkMode()
   const [tasks, setTasks] = useState<TypeTask[]>(
     localStorage.getItem('tasks') ? JSON.parse(localStorage.getItem('tasks')!) : []
   )
 
-  const refValue = useRef<string>('')
+  const ref = useRef<HTMLInputElement | null>(null)
 
-  useMemo(() => {
+  useEffect(() => {
     localStorage.setItem('tasks', JSON.stringify(tasks))
   }, [tasks])
 
   useLayoutEffect(() => {
-    document.querySelector('h2')!.textContent = `You have ${ tasks.length } tasks`
+    document.title = `You have ${ tasks.length } tasks`
   }, [tasks])
 
   // Handle Functions
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     
-    if (refValue.current.length < 3) {
+    if (!ref.current?.value || ref.current?.value.length < 3) {
       alert('Task must be at least 3 characters long')
       return
     }
 
     let newTask: TypeTask = {
       id: new Date().getTime(),
-      title: refValue.current,
+      title: ref.current.value
     }
 
     setTasks([newTask, ...tasks])
-    refValue.current = ''
+    ref.current.value = ''
   }
 
   const handleClickDel = useCallback((id: number) => {
@@ -53,10 +53,17 @@ const TaskList = () => {
   return (
     <div className={`w-full h-screen px-4 py-9 ${ bgModeStyles }`}>
       <div className={`max-w-sm lg:max-w-lg mx-auto border rounded-md p-4 ${ modeStyles }`}>
-        <button onClick={ ()=> setDarkMode(prev => !prev) }>{ darkMode ? <Sun /> : <Moon /> }</button>
-        <h1 className="font-bold text-center">Task List</h1>
-        <h2 className="text-center text-sm mb-4" />
-        <TaskInput onSubmit={ handleSubmit } refValue={ refValue } />
+        <button onClick={ toggleDarkMode }>{ darkMode ? <Sun /> : <Moon /> }</button>
+        <h1 className="font-bold text-center mb-6">Task List</h1>
+        <form onSubmit={ handleSubmit } className="flex mb-4">
+          <TaskInput ref={ ref } />
+          <button
+            type="submit"
+            className="rounded px-4 font-bold bg-slate-400 text-slate-800 hover:bg-slate-500 hover:text-white active:bg-slate-300 active:text-slate-500"
+          >
+            Add
+          </button>
+        </form>
         <ul>
           {tasks.map((task) => (
             <Task key={task.id} task={ task } onClick={ handleClickDel } />
